@@ -1,10 +1,12 @@
 version: "3.3"
 services:
+
   # Applications
+
   catalog-service:
     depends_on:
       - polar-postgres
-    image: "ghcr.io/kykuk/catalog-service"
+    image: "catalog-service"
     container_name: "catalog-service"
     ports:
       - 9001:9001
@@ -22,30 +24,47 @@ services:
   order-service:
     depends_on:
       - polar-postgres
-    image: "ghcr.io/kykuk/order-service"
+      - polar-rabbitmq
+    image: "order-service"
     container_name: "order-service"
     ports:
       - 9002:9002
       - 8002:8002
     environment:
-      # Buildpacks environment variable to enable debug through a socket on port 8001
+      # Buildpacks environment variable to enable debug through a socket on port 8002
       - BPL_DEBUG_ENABLED=true
       - BPL_DEBUG_PORT=8002
       - POLAR_CATALOG_SERVICE_URI=http://catalog-service:9001
       - SPRING_CLOUD_CONFIG_URI=http://config-service:8888
       - SPRING_R2DBC_URL=r2dbc:postgresql://polar-postgres:5432/polardb_order
       - SPRING_FLYWAY_URL=jdbc:postgresql://polar-postgres:5432/polardb_order
+      - SPRING_RABBITMQ_HOST=polar-rabbitmq
+
+  dispatcher-service:
+    depends_on:
+      - polar-rabbitmq
+    image: "dispatcher-service"
+    container_name: dispatcher-service
+    ports:
+      - 9003:9003
+      - 8003:8003
+    environment:
+      # Buildpacks environment variable to enable debug through a socket on port 8003
+      - BPL_DEBUG_ENABLED=true
+      - BPL_DEBUG_PORT=8003
+      - SPRING_CLOUD_CONFIG_URI=http://config-service:8888
+      - SPRING_RABBITMQ_HOST=polar-rabbitmq
 
   edge-service:
     depends_on:
       - polar-redis
-    image: "ghcr.io/kykuk/edge-service"
+    image: "edge-service"
     container_name: "edge-service"
     ports:
       - 9000:9000
       - 8000:8000
     environment:
-      # Buildpacks environment variable to enable debug through a socket on port 8001
+      # Buildpacks environment variable to enable debug through a socket on port 8000
       - BPL_DEBUG_ENABLED=true
       - BPL_DEBUG_PORT=8000
       - CATALOG_SERVICE_URI=http://catalog-service:9001
@@ -54,7 +73,7 @@ services:
       - SPRING_REDIS_HOST=polar-redis
       
   config-service:
-    image: "ghcr.io/kykuk/config-service"
+    image: "config-service"
     container_name: "config-service"
     ports:
       - 8888:8888
@@ -67,6 +86,7 @@ services:
       - BPL_DEBUG_PORT=9888
 
   # Backing Services
+  
   polar-postgres:
     image: "postgres:14.4"
     container_name: "polar-postgres"
@@ -92,5 +112,4 @@ services:
       - 15672:15672
     volumes:
       - ./rabbitmq/rabbitmq.conf:/etc/rabbitmq/rabbitmq.conf
-            
       

@@ -10,6 +10,7 @@ data:
     CREATE DATABASE polardb_order;
 
 ---
+
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -49,6 +50,7 @@ spec:
             name: postgres-config
                        
 ---
+
 apiVersion: v1
 kind: Service
 metadata:
