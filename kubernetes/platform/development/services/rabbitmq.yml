@@ -40,7 +40,7 @@ spec:
           volumeMounts:
             - mountPath: /etc/rabbitmq
               name: rabbitmq-config-volume
-      volumeMounts:
+      volumes:
         - name: rabbitmq-config-volume
           configMap:
             name: rabbitmq-config
